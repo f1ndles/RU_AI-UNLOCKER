@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=RU AI Unlocker
+Comment=Управление и обновление hosts для разблокировки AI-сервисов
+Exec=python3 /usr/local/bin/ruaiunlocker_gui.py
+Icon=network-vpn
+Terminal=false
+Type=Application
+Categories=Network;Utility;
+StartupNotify=true

@@ -1,0 +1,14 @@
+﻿bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+.gradle/
+build/
+local.properties
+__pycache__/
+*.pyc
+*.pyo
+*.tmp
+*.bak
