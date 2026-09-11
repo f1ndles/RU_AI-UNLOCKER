@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RU Unlocker</title>
+<style>
+  :root {
+    --bg:      #0f1117;
+    --surface: #181c27;
+    --border:  #252a38;
+    --accent:  #4f8ef7;
+    --green:   #2dd4a7;
+    --danger:  #f75a5a;
+    --warn:    #f7a84f;
+    --text:    #e8eaf0;
+    --muted:   #6b7280;
+    --mono:    'JetBrains Mono','Fira Code',monospace;
+    --r:       14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system,'Inter',sans-serif;
+    font-size: 15px; line-height: 1.6;
+    min-height: 100vh; padding-bottom: 40px;
+  }
+
+  header {
+    background: linear-gradient(135deg,#141828,#1a2040);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 14px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .dot { width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green); }
+  header h1 { font-size:17px;font-weight:700; }
+  header h1 span { color:var(--accent); }
+  .ver { margin-left:auto;font-size:11px;font-family:var(--mono);color:var(--muted);background:var(--border);padding:3px 8px;border-radius:20px; }
+
+  .tabs {
+    display:flex; gap:4px; padding:12px 20px 0;
+    border-bottom:1px solid var(--border);
+    background:var(--surface); overflow-x:auto;
+  }
+  .tab {
+    padding:8px 16px; border-radius:var(--r) var(--r) 0 0;
+    background:transparent; border:none; color:var(--muted);
+    font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
+    transition:color .15s,background .15s;
+  }
+  .tab.active { background:var(--bg);color:var(--text);border:1px solid var(--border);border-bottom:1px solid var(--bg); }
+
+  .page { display:none; padding:20px; }
+  .page.active { display:block; }
+
+  .card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px; }
+  .card-title { font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:14px; }
+
+  .stat-row { display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px; }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-label { color:var(--muted); }
+  .stat-value { font-weight:600; }
+  .pill { font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:20px;font-weight:700; }
+  .pill-green  { background:rgba(45,212,167,.15);color:var(--green); }
+  .pill-red    { background:rgba(247,90,90,.15);color:var(--danger); }
+  .pill-yellow { background:rgba(247,168,79,.15);color:var(--warn); }
+
+  .btn { display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.2px; }
+  .btn:active { transform:scale(.98); }
+  .btn:disabled { opacity:.45;cursor:not-allowed;transform:none; }
+  .btn-primary { background:var(--accent);color:#fff; }
+  .btn-danger  { background:var(--danger);color:#fff; }
+  .btn-ghost   { background:var(--border);color:var(--text); }
+  .btn + .btn  { margin-top:10px; }
+
+  .progress-bar { height:3px;background:var(--border);border-radius:4px;overflow:hidden;margin:14px 0 8px; }
+  .progress-fill { height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:4px;transition:width .4s ease;width:0%; }
+  .status-line { font-size:12px;font-family:var(--mono);color:var(--muted);min-height:18px; }
+
+  /* blacklist */
+  .domain-search { width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none; }
+  .domain-search:focus { border-color:var(--accent); }
+  .domain-list { max-height:340px;overflow-y:auto;scrollbar-width:thin; }
+  .domain-item { display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--border);font-size:13px;font-family:var(--mono); }
+  .domain-item:last-child { border-bottom:none; }
+  .domain-item input[type=checkbox] { width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0; }
+  .domain-item label { cursor:pointer;flex:1;word-break:break-all; }
+  .domain-item.blocked label { color:var(--danger);text-decoration:line-through; }
+
+  /* blocksrv */
+  .bs-row { display:flex;gap:8px;margin-bottom:14px; }
+  .bs-row input { flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none; }
+  .bs-row input:focus { border-color:var(--danger); }
+  .bs-row .btn { width:auto;padding:10px 18px;font-size:13px;border-radius:10px; }
+  .block-item { display:flex;align-items:center;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--border);font-size:13px;font-family:var(--mono); }
+  .block-item:last-child { border-bottom:none; }
+  .rm { background:none;border:none;color:var(--danger);cursor:pointer;font-size:20px;line-height:1;padding:0 4px; }
+
+  /* лог */
+  .log-box { background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:var(--mono);font-size:11px;color:#9ca3af;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;scrollbar-width:thin; }
+  .log-ok   { color:var(--green); }
+  .log-err  { color:var(--danger); }
+  .log-warn { color:var(--warn); }
+
+  .empty { text-align:center;padding:28px 0;color:var(--muted);font-size:13px; }
+
+  #toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;transition:transform .25s ease;z-index:999;white-space:nowrap; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <h1>RU <span>Unlocker</span></h1>
+  <div class="ver" id="hdr-ver">v—</div>
+  <div class="ver" id="hdr-bridge" style="background:#1a2040;color:#f7a84f">bridge: ...</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="go('home')">Главная</button>
+  <button class="tab" onclick="go('blacklist')">Blacklist</button>
+  <button class="tab" onclick="go('blocksrv')">BlockSRV</button>
+  <button class="tab" onclick="go('logs')">Логи</button>
+</div>
+
+<!-- ГЛАВНАЯ -->
+<div id="page-home" class="page active">
+  <div class="card">
+    <div class="card-title">Статус</div>
+    <div class="stat-row"><span class="stat-label">Версия</span><span class="stat-value" id="st-ver">—</span></div>
+    <div class="stat-row"><span class="stat-label">Hosts активен</span><span id="st-mnt" class="pill pill-yellow">...</span></div>
+    <div class="stat-row"><span class="stat-label">Строк в hosts</span><span class="stat-value" id="st-lines">—</span></div>
+    <div class="stat-row"><span class="stat-label">Дата hosts</span><span class="stat-value" id="st-date">—</span></div>
+    <div class="stat-row"><span class="stat-label">Blacklist</span><span class="stat-value" id="st-bl">—</span></div>
+    <div class="stat-row"><span class="stat-label">BlockSRV</span><span class="stat-value" id="st-bs">—</span></div>
+  </div>
+  <button class="btn btn-primary" id="btn-upd" onclick="runUpdate()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    Обновить hosts
+  </button>
+  <div id="upd-box" style="display:none">
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <div class="status-line" id="upd-txt"></div>
+  </div>
+</div>
+
+<!-- BLACKLIST -->
+<div id="page-blacklist" class="page">
+  <div class="card">
+    <div class="card-title">Blacklist — исключить домен из hosts</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Отмеченные домены убираются из hosts при обновлении.</p>
+    <input class="domain-search" type="search" placeholder="Поиск..." id="bl-search" oninput="filterDomains()">
+    <div class="domain-list" id="bl-list"><div class="empty">Загрузка...</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="saveBlacklist()">Сохранить и применить</button>
+</div>
+
+<!-- BLOCKSRV -->
+<div id="page-blocksrv" class="page">
+  <div class="card">
+    <div class="card-title">BlockSRV — заблокировать сайт</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Домен получает 0.0.0.0 — сайт перестаёт открываться. Применяется сразу.</p>
+    <div class="bs-row">
+      <input type="text" id="bs-inp" placeholder="example.com" autocapitalize="none" autocorrect="off">
+      <button class="btn btn-danger" onclick="addBlock()">Добавить</button>
+    </div>
+    <div id="bs-list"><div class="empty">Список пуст</div></div>
+  </div>
+  <button class="btn btn-danger" onclick="applyBlocklist()">Применить BlockSRV</button>
+</div>
+
+<!-- ЛОГИ -->
+<div id="page-logs" class="page">
+  <div class="card">
+    <div class="card-title">Лог операций</div>
+    <div class="log-box" id="log-box">Загрузка...</div>
+  </div>
+  <button class="btn btn-ghost" style="margin-top:0" onclick="loadLogs()">Обновить лог</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── exec bridge ────────────────────────────────
+// Поддержка KSU, APatch и Magisk WebUI
+// ─── обнаружение bridge ─────────────────────────
+function detectBridge() {
+  if (window.ksu && typeof window.ksu.exec === 'function') return 'ksu';
+  if (window.__ksu_exec && typeof window.__ksu_exec === 'function') return 'ksu_alt';
+  if (typeof exec === 'function') return 'magisk';
+  return 'none';
+}
+
+const _bridgeType = detectBridge();
+
+console.log('[RU Unlocker] bridge:', _bridgeType);
+console.log('[RU Unlocker] window.ksu keys:', window.ksu ? Object.keys(window.ksu) : 'N/A');
+
+// Пробуем все известные варианты получения вывода из ksu.exec
+async function _ksuExec(cmd) {
+  const r = await window.ksu.exec(cmd);
+  console.log('[RU Unlocker] ksu.exec raw response:', JSON.stringify(r));
+
+  if (!r) return '';
+
+  // Вариант 1: { stdout, stderr } — стандартный KSU
+  if (typeof r.stdout === 'string') return r.stdout + (r.stderr || '');
+
+  // Вариант 2: { out, err } — некоторые сборки APatch
+  if (typeof r.out === 'string') return r.out + (r.err || '');
+
+  // Вариант 3: { output } 
+  if (typeof r.output === 'string') return r.output;
+
+  // Вариант 4: { result }
+  if (typeof r.result === 'string') return r.result;
+
+  // Вариант 5: сам ответ — строка
+  if (typeof r === 'string') return r;
+
+  // Вариант 6: массив
+  if (Array.isArray(r)) return r.join('\n');
+
+  // Дамп всего объекта в лог чтобы понять структуру
+  console.warn('[RU Unlocker] неизвестная структура ответа:', JSON.stringify(r));
+  return JSON.stringify(r); // возвращаем дамп чтобы увидеть в UI
+}
+
+async function sh(cmd) {
+  try {
+    if (_bridgeType === 'ksu') return await _ksuExec(cmd);
+    if (_bridgeType === 'ksu_alt') {
+      const r = await window.__ksu_exec(cmd);
+      return (r && r.stdout) || (r && r.out) || (typeof r === 'string' ? r : '');
+    }
+    if (_bridgeType === 'magisk') {
+      return new Promise(resolve => {
+        exec(cmd, {}, (errno, stdout, stderr) => {
+          resolve((stdout || '') + (stderr || ''));
+        });
+      });
+    }
+    console.error('[RU Unlocker] sh(): нет bridge!');
+    return '';
+  } catch(e) {
+    console.error('[RU Unlocker] sh() exception:', e, 'cmd:', cmd);
+    return '';
+  }
+}
+
+const DATA = '/data/adb/unlocker_zrpb';
+const MOD  = '/data/adb/modules/unlocker_zrpb';
+
+async function readFile(p) {
+  // Читаем весь файл одним вызовом через base64 — вместо сотен dd-чанков.
+  // base64 доступен на любом Android (busybox/toybox/system).
+  const b64 = await sh(`base64 "${p}" 2>/dev/null`);
+  if (!b64 || !b64.trim()) return '';
+  try {
+    const bin = atob(b64.replace(/\s/g, ''));
+    return decodeURIComponent(escape(bin)).trim();
+  } catch(e) {
+    // Если atob упал — файл повреждён или не base64; возвращаем как есть
+    console.warn('[readFile] decode error:', e, 'path:', p);
+    return b64.trim();
+  }
+}
+
+async function writeFile(p, content) {
+  // Нормализуем переносы строк (CRLF -> LF)
+  content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Кодируем в base64 и пишем одним вызовом — вместо N printf на каждую строку.
+  // base64 -d безопасно обрабатывает любые символы в доменах.
+  const b64 = btoa(unescape(encodeURIComponent(content)));
+  const out  = await sh(`echo '${b64}' | base64 -d > '${p}.tmp' && mv -f '${p}.tmp' '${p}' && echo OK`);
+  if (!out || !out.includes('OK')) {
+    console.error('[writeFile] write failed, path:', p, 'response:', out);
+  }
+}
+
+// ─── инициализация ───────────────────────────────
+window.addEventListener('load', () => {
+  // Ждём ksu bridge
+  setTimeout(init, 400);
+});
+
+async function init() {
+  // Показываем bridge в шапке
+  document.getElementById('hdr-bridge').textContent = 'bridge: ' + _bridgeType;
+  if (_bridgeType === 'none') {
+    document.getElementById('hdr-bridge').style.color = '#f75a5a';
+    addLog('❌ Shell bridge не обнаружен! WebUI не может выполнять команды.', 'err');
+  } else {
+    document.getElementById('hdr-bridge').style.color = '#2dd4a7';
+    addLog('✅ Bridge: ' + _bridgeType, 'ok');
+  }
+  await loadStatus();
+  await loadBlacklist();
+  await loadBlocklist();
+  await loadLogs();
+}
+
+// ─── статус ──────────────────────────────────────
+async function loadStatus() {
+  const prop = await readFile(`${MOD}/module.prop`);
+  const ver  = (prop.match(/^version=(.+)$/m)||[])[1] || '—';
+  document.getElementById('st-ver').textContent  = ver;
+  document.getElementById('hdr-ver').textContent = ver;
+
+  const mnt = await sh("mount | grep 'system/etc/hosts'");
+  const el  = document.getElementById('st-mnt');
+  if (mnt.includes('hosts')) {
+    el.textContent = 'Активен'; el.className = 'pill pill-green';
+  } else {
+    el.textContent = 'Не активен'; el.className = 'pill pill-red';
+  }
+
+  const lines = await sh(`grep -c '' "${DATA}/hosts" 2>/dev/null || echo 0`);
+  document.getElementById('st-lines').textContent = lines.trim();
+
+  const date = await sh(`grep 'обновление:' "${DATA}/hosts.raw" 2>/dev/null | head -1 | sed 's/.*обновление:[[:space:]]*//'`);
+  document.getElementById('st-date').textContent = date.trim() || '—';
+
+  const bl = await sh(`grep -c '' "${DATA}/blacklist.conf" 2>/dev/null || echo 0`);
+  const bs = await sh(`grep -c '' "${DATA}/blocklist.conf" 2>/dev/null || echo 0`);
+  document.getElementById('st-bl').textContent = (bl.trim()||'0') + ' доменов';
+  document.getElementById('st-bs').textContent = (bs.trim()||'0') + ' доменов';
+}
+
+// ─── обновление hosts ────────────────────────────
+async function runUpdate() {
+  const btn = document.getElementById('btn-upd');
+  const box = document.getElementById('upd-box');
+  btn.disabled = true;
+  box.style.display = 'block';
+
+  if (_bridgeType === 'none') {
+    addLog('❌ Нет shell bridge — невозможно запустить action.sh', 'err');
+    setProgress(0, 'Ошибка: нет bridge');
+    btn.disabled = false;
+    return;
+  }
+
+  // ── диагностика перед запуском ──────────────────
+  addLog('▶ Диагностика bridge...', 'info');
+  setProgress(5, 'Проверка...');
+
+  const t1 = await sh('echo hello');
+  addLog('echo hello → ' + JSON.stringify(t1), t1.includes('hello') ? 'ok' : 'err');
+
+  const t2 = await sh('id');
+  addLog('id → ' + JSON.stringify(t2.trim()), t2.includes('uid') ? 'ok' : 'err');
+
+  const t3 = await sh(`ls -la ${MOD}/action.sh 2>&1`);
+  addLog('ls action.sh → ' + JSON.stringify(t3.trim()), t3.includes('action') ? 'ok' : 'err');
+
+  const t4 = await sh(`sh -c 'echo from_sh_c'`);
+  addLog('sh -c echo → ' + JSON.stringify(t4.trim()), t4.includes('from_sh_c') ? 'ok' : 'err');
+
+  const t5 = await sh(`chmod +x ${MOD}/action.sh 2>&1 && sh ${MOD}/action.sh 2>&1`);
+  addLog('chmod+run → ' + JSON.stringify(t5 ? t5.trim().slice(0,200) : 'ПУСТО'), t5 ? 'ok' : 'err');
+
+  if (!t1.includes('hello')) {
+    addLog('❌ Bridge не выполняет команды вообще', 'err');
+    setProgress(0, 'Bridge не работает');
+    toast('Bridge сломан — смотри логи');
+    await loadLogs();
+    setTimeout(() => { btn.disabled = false; }, 1500);
+    return;
+  }
+
+  addLog('▶ Запускаю action.sh...', 'info');
+  setProgress(10, 'Запускаю action.sh...');
+
+  const out = await sh(`sh ${MOD}/action.sh 2>&1`);
+  const lastLine = out.split('\n').filter(Boolean).pop() || 'Нет вывода';
+
+  if (!out) {
+    addLog('❌ action.sh вернул пустой вывод', 'err');
+    setProgress(0, 'Пустой вывод');
+    toast('Ошибка — смотри логи');
+  } else {
+    addLog('📄 Вывод action.sh:\n' + out.trim(), out.includes('✅') ? 'ok' : 'warn');
+    setProgress(100, lastLine);
+    toast(out.includes('✅') ? 'Hosts обновлён 🎉' : 'Ошибка — смотри логи');
+  }
+
+  await loadStatus();
+  await loadLogs();
+  setTimeout(() => { btn.disabled = false; }, 1500);
+}
+
+function setProgress(pct, msg) {
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('upd-txt').textContent = msg;
+}
+
+// ─── blacklist ───────────────────────────────────
+let allDomains = [], blacklisted = new Set();
+const BL_PAGE = 100; // домены на страницу
+let blOffset = 0;
+
+async function loadBlacklist() {
+  // Читаем домены из финального hosts — он уже существует после первого Action.
+  // Fallback на hosts.raw если вдруг hosts недоступен.
+  // Исключаем комментарии, localhost и 0.0.0.0-записи BlockSRV.
+  const domainsTmp = `${DATA}/domains.tmp`;
+  await sh(`awk 'NF>=2 && $1!~/^#/ && $1!="0.0.0.0" && $2!="localhost" {print $2}' "${DATA}/hosts" 2>/dev/null | sort -u > "${domainsTmp}" 2>/dev/null; \
+            [ -s "${domainsTmp}" ] || awk 'NF>=2 && $1!~/^#/ && $1!="0.0.0.0" && $2!="localhost" {print $2}' "${DATA}/hosts.raw" 2>/dev/null | sort -u > "${domainsTmp}"`);
+
+  const raw = await readFile(domainsTmp);
+  allDomains = raw.split('\n').map(d=>d.trim()).filter(Boolean);
+
+  if (allDomains.length === 0) {
+    addLog('⚠ Домены не найдены. Сначала нажмите «Обновить hosts» на Главной.', 'warn');
+  } else {
+    addLog(`✅ Загружено доменов: ${allDomains.length}`, 'ok');
+  }
+
+  const bl = await readFile(`${DATA}/blacklist.conf`);
+  blacklisted = new Set(bl.split('\n').map(d=>d.trim()).filter(Boolean));
+  blOffset = 0;
+  renderDomains();
+}
+
+function renderDomains(q='') {
+  const el = document.getElementById('bl-list');
+  const filtered = q
+    ? allDomains.filter(d=>d.includes(q.toLowerCase()))
+    : allDomains;
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty">${allDomains.length?'Не найдено':'Сначала нажмите «Обновить hosts»'}</div>`;
+    return;
+  }
+
+  // Показываем страницу BL_PAGE доменов
+  const page = filtered.slice(blOffset, blOffset + BL_PAGE);
+  const total = filtered.length;
+
+  let html = page.map(d=>{
+    const chk = blacklisted.has(d)?'checked':'';
+    const cls = blacklisted.has(d)?'domain-item blocked':'domain-item';
+    const id  = 'cb_'+d.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div class="${cls}" id="di_${id}">
+      <input type="checkbox" id="${id}" ${chk} onchange="toggleBL('${d}',this)">
+      <label for="${id}">${d}</label>
+    </div>`;
+  }).join('');
+
+  // Навигация
+  const pages = Math.ceil(total / BL_PAGE);
+  const cur   = Math.floor(blOffset / BL_PAGE) + 1;
+  html += `<div style="display:flex;gap:8px;padding:12px 4px;align-items:center;font-size:12px;color:var(--muted)">
+    <button class="btn btn-ghost" style="width:auto;padding:6px 14px;font-size:12px" ${blOffset===0?'disabled':''} onclick="blPage(-1)">←</button>
+    <span>${cur}/${pages} (${total} доменов)</span>
+    <button class="btn btn-ghost" style="width:auto;padding:6px 14px;font-size:12px" ${blOffset+BL_PAGE>=total?'disabled':''} onclick="blPage(1)">→</button>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function blPage(dir) {
+  const q = document.getElementById('bl-search').value;
+  const filtered = q ? allDomains.filter(d=>d.includes(q.toLowerCase())) : allDomains;
+  blOffset = Math.max(0, Math.min(blOffset + dir * BL_PAGE, filtered.length - 1));
+  renderDomains(q);
+}
+
+function filterDomains() {
+  blOffset = 0;
+  renderDomains(document.getElementById('bl-search').value);
+}
+function toggleBL(d,el) {
+  el.checked ? blacklisted.add(d) : blacklisted.delete(d);
+  const row = document.getElementById('di_cb_'+d.replace(/\./g,'_'));
+  if(row) row.className = el.checked?'domain-item blocked':'domain-item';
+}
+
+async function saveBlacklist() {
+  await writeFile(`${DATA}/blacklist.conf`, [...blacklisted].join('\n'));
+  // Проверяем что файл записан перед запуском blocksrv
+  const check = await sh(`cat '${DATA}/blacklist.conf' 2>/dev/null | wc -l`);
+  addLog('blacklist.conf строк: ' + check.trim(), 'info');
+  const out = await sh(`sh ${MOD}/blocksrv.sh 2>&1`);
+  toast(out.includes('OK') ? `Blacklist применён (${blacklisted.size})` : 'Ошибка: ' + out.trim().slice(0,80));
+  await loadStatus();
+  await loadLogs();
+}
+
+// ─── blocksrv ────────────────────────────────────
+let blocklist = [];
+
+async function loadBlocklist() {
+  const raw = await readFile(`${DATA}/blocklist.conf`);
+  blocklist  = raw.split('\n').map(d=>d.trim()).filter(Boolean);
+  renderBlocklist();
+}
+
+function renderBlocklist() {
+  const el = document.getElementById('bs-list');
+  if (!blocklist.length) { el.innerHTML = '<div class="empty">Список пуст</div>'; return; }
+  el.innerHTML = blocklist.map((d,i)=>
+    `<div class="block-item"><span>🚫 ${d}</span><button class="rm" onclick="rmBlock(${i})">×</button></div>`
+  ).join('');
+}
+
+function addBlock() {
+  let v = document.getElementById('bs-inp').value.trim().toLowerCase()
+    .replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if (!v || blocklist.includes(v)) return;
+  blocklist.push(v);
+  document.getElementById('bs-inp').value = '';
+  renderBlocklist();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('bs-inp').addEventListener('keydown', e => {
+    if (e.key==='Enter') addBlock();
+  });
+});
+function rmBlock(i) { blocklist.splice(i,1); renderBlocklist(); }
+
+async function applyBlocklist() {
+  await writeFile(`${DATA}/blocklist.conf`, blocklist.join('\n'));
+  // Проверяем что файл записан перед запуском blocksrv
+  const check = await sh(`cat '${DATA}/blocklist.conf' 2>/dev/null | wc -l`);
+  addLog('blocklist.conf строк: ' + check.trim(), 'info');
+  const out = await sh(`sh ${MOD}/blocksrv.sh 2>&1`);
+  toast(out.includes('OK') ? `BlockSRV применён (${blocklist.length})` : 'Ошибка: ' + out.trim().slice(0,80));
+  await loadStatus();
+  await loadLogs();
+}
+
+// ─── in-memory лог WebUI ─────────────────────────
+const _uiLog = [];
+function addLog(msg, type) {
+  const ts = new Date().toLocaleTimeString('ru');
+  _uiLog.push({ ts, msg, type: type || 'info' });
+  _renderUILog();
+  // Дублируем в файл асинхронно (не ждём)
+  sh(`echo '[UI ${ts}] ${msg.replace(/'/g,"\\'")}' >> '${DATA}/logs.txt'`).catch(()=>{});
+}
+
+function _renderUILog() {
+  const box = document.getElementById('log-box');
+  if (!box) return;
+  // UI лог сверху, потом файловый лог
+  const uiLines = _uiLog.slice(-50).map(e => {
+    const s = `[${e.ts}] ${e.msg}`.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (e.type==='ok')   return `<span class="log-ok">${s}</span>`;
+    if (e.type==='err')  return `<span class="log-err">${s}</span>`;
+    if (e.type==='warn') return `<span class="log-warn">${s}</span>`;
+    return s;
+  });
+  box.innerHTML = uiLines.join('\n');
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─── логи ────────────────────────────────────────
+async function loadLogs() {
+  const raw = await readFile(`${DATA}/logs.txt`);
+  const box = document.getElementById('log-box');
+  // Рендерим UI лог
+  _renderUILog();
+  if (!raw) {
+    if (_uiLog.length === 0) box.textContent = 'Логов пока нет';
+    return;
+  }
+  // Добавляем файловый лог под UI логом
+  const fileLines = raw.split('\n').slice(-100).map(l => {
+    const s = l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (/OK:|✅|Готово|применён/.test(l))  return `<span class="log-ok">${s}</span>`;
+    if (/ERROR|❌|FAIL|не удался/.test(l)) return `<span class="log-err">${s}</span>`;
+    if (/WARN|⚠/.test(l))                 return `<span class="log-warn">${s}</span>`;
+    return s;
+  });
+  if (fileLines.length > 0) {
+    box.innerHTML += (_uiLog.length > 0 ? '\n<span style="color:#252a38">─────────────</span>\n' : '') + fileLines.join('\n');
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─── навигация ───────────────────────────────────
+const TABS = ['home','blacklist','blocksrv','logs'];
+function go(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===name));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (name==='logs') loadLogs();
+}
+
+// ─── тост ────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

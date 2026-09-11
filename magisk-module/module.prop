@@ -1,0 +1,8 @@
+id=unlocker_zrpb
+name=Разблокировщик сервисов в РФ
+version=24 BETA
+versionCode=24
+author=финдл | тгк: F1NDLE_cn
+description=Разблокировка зарубежных сервисов. Нажмите Action для обновления hosts.
+banner=https://raw.githubusercontent.com/F1NDLE/RU_AI_UNLOCKER/refs/heads/main/banner.png
+updateJson=https://raw.githubusercontent.com/F1NDLE/RU_AI_UNLOCKER/refs/heads/main/update.json
