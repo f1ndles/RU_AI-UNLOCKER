@@ -1,8 +1,0 @@
-{
-  "version_name": "1.0.1",
-  "version_code": 2,
-  "release_date": "2026-09-12",
-  "download_url": "https://raw.githubusercontent.com/f1ndles/RU_AI-UNLOCKER/main/android-app/RUAIUnlocker.apk",
-  "changelog": "Добавлена поддержка новых версий hosts и исправление фоновой службы",
-  "mandatory": false
-}
