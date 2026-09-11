@@ -27,7 +27,7 @@
 Запустите одну команду в терминале, предварительно установив всё для линукса:
 ```bash
 chmod +x ruaiunlocker.sh
-./ruaiunlocker.sh
+sudo bash ruaiunlocker.sh
 ```
 
 
